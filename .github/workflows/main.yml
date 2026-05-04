@@ -21,6 +21,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Debug requirements
+        run: cat requirements.txt    
+
       # 3. Install dependencies
       - name: Install dependencies
         run: |
