@@ -68,3 +68,8 @@ jobs:
               --restart unless-stopped \
               --name app \
                 acallo21/devops-ml-app:latest
+
+                 echo "Waiting for app..."
+            sleep 10
+
+            curl -f http://localhost:5000 || exit 1
