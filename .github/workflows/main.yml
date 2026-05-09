@@ -39,6 +39,9 @@ jobs:
           docker build -t acallo21/devops-ml-app:$VERSION .
           docker tag acallo21/devops-ml-app:$VERSION acallo21/devops-ml-app:latest
 
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
       - name: Push Docker image
         run: |
           docker push acallo21/devops-ml-app:$VERSION
