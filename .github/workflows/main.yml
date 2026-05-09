@@ -31,16 +31,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Set image version
+        run: echo "VERSION=${GITHUB_SHA::7}" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: |
-          docker build -t $IMAGE_NAME:latest .
+          docker build -t acallo21/devops-ml-app:$VERSION .
+          docker tag acallo21/devops-ml-app:$VERSION acallo21/devops-ml-app:latest
 
       - name: Push Docker image
         run: |
-          docker push $IMAGE_NAME:latest
+          docker push acallo21/devops-ml-app:$VERSION
+          docker push acallo21/devops-ml-app:latest
 
   deploy:
     needs: build-and-push
