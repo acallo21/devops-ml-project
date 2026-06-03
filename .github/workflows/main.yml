@@ -7,24 +7,34 @@ on:
 jobs:
 
   test:
-    runs-on: ubuntu-latest
+  runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+  steps:
+    - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
+    - name: Verify Python & pip
+      run: |
+        python --version
+        pip --version
 
-      - name: Run Tests
-        run: pytest -v
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install -r requirements.txt
+        python -m pip install pytest
+
+    - name: Verify pytest install
+      run: |
+        python -m pytest --version
+
+    - name: Run Tests
+      run: |
+        python -m pytest -v
 
 
   build-and-push:
