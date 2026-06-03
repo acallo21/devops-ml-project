@@ -5,31 +5,28 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-push:
+
+  test:
     runs-on: ubuntu-latest
-
-    env:
-      IMAGE_NAME: acallo21/devops-ml-app
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+      - name: Run Tests
+        run: pytest -v
 
-      - name: Test Flask import
-        run: python -c "import flask; print('Flask OK')"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Set image version
         run: echo "VERSION=${GITHUB_SHA::7}" >> $GITHUB_ENV
@@ -47,29 +44,31 @@ jobs:
           docker push acallo21/devops-ml-app:$VERSION
           docker push acallo21/devops-ml-app:latest
 
+      - name: Validate Container Health
+        run: |
+          set -e
+          docker run -d --name test-container -p 5000:5000 acallo21/devops-ml-app:$VERSION
+          sleep 10
+          curl -f http://localhost:5000/health
+          docker rm -f test-container
+
+
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy to EC2
+      - name: Deploy to EC2 (Docker Compose)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull acallo21/devops-ml-app:latest
+            docker compose pull
+            docker compose up -d
 
-            docker stop app || true
-            docker rm -f app || true
-
-            docker run -d -p 5000:5000 \
-              --restart unless-stopped \
-              --name app \
-                acallo21/devops-ml-app:latest
-
-                 echo "Waiting for app..."
             sleep 10
 
-            curl -f http://localhost:5000 || exit 1
+            curl -f http://localhost/health
+            curl -f http://localhost/
