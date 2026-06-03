@@ -15,10 +15,3 @@ EXPOSE 5000
 
 # Run the app
 CMD ["python", "app.py"]
-
-# Health check
-healthcheck:
-  test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-  interval: 30s
-  timeout: 10s
-  retries: 3
